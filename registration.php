@@ -17,11 +17,20 @@
                         <div class="layer layer-3"></div>
                     </div>
                 </div>
-                <h2>Sign in</h2>
-                <p>to continue to your account</p>
+                <h2>Sign up</h2>
+                <p>Create your account</p>
             </div>
             
             <form class="login-form" id="loginForm" novalidate>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="fullname" name="fullname" required autocomplete="name">
+                        <label for="fullname">Full name</label>
+                        <div class="input-line"></div>
+                        <div class="ripple-container"></div>
+                    </div>
+                    <span class="error-message" id="fullnameError"></span>
+                </div>
                 <div class="form-group">
                     <div class="input-wrapper">
                         <input type="email" id="email" name="email" required autocomplete="email">
@@ -44,6 +53,20 @@
                         <div class="ripple-container"></div>
                     </div>
                     <span class="error-message" id="passwordError"></span>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="current-password">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="input-line"></div>
+                        <button type="button" class="password-toggle" id="passwordToggleConfirm" aria-label="Toggle password visibility">
+                            <div class="toggle-ripple"></div>
+                            <span class="toggle-icon"></span>
+                        </button>
+                        <div class="ripple-container"></div>
+                    </div>
+                    <span class="error-message" id="confirmPasswordError"></span>
                 </div>
 
                 <div class="form-options">
@@ -121,6 +144,6 @@
     </div>
 
     <script src="./assets/js/form-utils.js"></script>
-    <script src="./assets/js/script.js"></script>
+    <script src="./assets/js/scriptRegister.js"></script>
 </body>
 </html>
