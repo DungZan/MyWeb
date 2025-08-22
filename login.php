@@ -1,3 +1,31 @@
+<?php
+session_start();
+$error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once __DIR__ . '/includes/auth.php';
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    if (empty($email) || empty($password)) {
+        $error = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+    } else {
+        $user = login($email, $password);
+        if ($user) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['is_admin'] = $user['is_admin'];
+            // Nếu người dùng là quản trị viên, chuyển hướng đến trang quản trị
+            if ($user['is_admin']) {
+                header('Location: admin/index.php');
+            } else {
+                header('Location: index.php');
+            }
+            exit;
+        } else {
+            $error = 'Email hoặc mật khẩu không đúng!';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,10 +50,15 @@
                 <p>to continue to your account</p>
             </div>
             
-            <form class="login-form" id="loginForm" novalidate>
+            <form class="login-form" id="loginForm" method="POST" novalidate>
+                <?php if (!empty($error)): ?>
+                <div class="error-message" style="color:red; text-align:center; margin-bottom:10px;">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+                <?php endif; ?>
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" required autocomplete="email">
+                        <input type="email" id="email" name="email" required autocomplete="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                         <label for="email">Email</label>
                         <div class="input-line"></div>
                         <div class="ripple-container"></div>

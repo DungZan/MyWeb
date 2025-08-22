@@ -20,7 +20,7 @@ class MaterialLoginForm {
     }
     
     bindEvents() {
-        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        //this.form.addEventListener('submit', (e) => this.handleSubmit(e));
         this.emailInput.addEventListener('blur', () => this.validateEmail());
         this.passwordInput.addEventListener('blur', () => this.validatePassword());
         this.emailInput.addEventListener('input', () => this.clearError('email'));
@@ -252,11 +252,6 @@ class MaterialLoginForm {
             
         }, 300);
         
-        // Simulate redirect with Material timing
-        setTimeout(() => {
-            console.log('Redirecting to dashboard...');
-            // window.location.href = '/dashboard';
-        }, 2500);
     }
 }
 
