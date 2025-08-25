@@ -1,3 +1,41 @@
+<?php
+require_once __DIR__ . '/includes/auth.php';
+$error = '';
+$success = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullname = trim($_POST['fullname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirmPassword'] ?? '';
+    if (empty($fullname) || empty($email) || empty($password) || empty($confirmPassword)) {
+        $error = 'Vui lòng nhập đầy đủ thông tin.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Email không hợp lệ.';
+    } elseif ($password !== $confirmPassword) {
+        $error = 'Mật khẩu xác nhận không khớp.';
+    } elseif (strlen($password) < 6) {
+        $error = 'Mật khẩu phải có ít nhất 6 ký tự.';
+    } else {
+        // Kiểm tra email đã tồn tại chưa
+        global $conn;
+        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $error = 'Email đã được sử dụng.';
+        } else {
+            if (signup($fullname, $email, $password)) {
+                $success = 'Đăng ký thành công! Bạn có thể đăng nhập.';
+            } else {
+                $error = 'Đăng ký thất bại. Vui lòng thử lại.';
+            }
+        }
+        $stmt->close();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,10 +59,20 @@
                 <p>Create your account</p>
             </div>
             
-            <form class="login-form" id="loginForm" novalidate>
+            <?php if (!empty($error)): ?>
+            <div class="error-message" style="color:red; text-align:center; margin-bottom:10px;">
+                <?= htmlspecialchars($error) ?>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($success)): ?>
+            <div class="success-message" style="color:green; text-align:center; margin-bottom:10px;">
+                <?= htmlspecialchars($success) ?>
+            </div>
+            <?php endif; ?>
+            <form class="login-form" id="loginForm" method="POST" novalidate>
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <input type="text" id="fullname" name="fullname" required autocomplete="name">
+                        <input type="text" id="fullname" name="fullname" required autocomplete="name" value="<?= htmlspecialchars($_POST['fullname'] ?? '') ?>">
                         <label for="fullname">Full name</label>
                         <div class="input-line"></div>
                         <div class="ripple-container"></div>
@@ -33,7 +81,7 @@
                 </div>
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" required autocomplete="email">
+                        <input type="email" id="email" name="email" required autocomplete="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
                         <label for="email">Email</label>
                         <div class="input-line"></div>
                         <div class="ripple-container"></div>
@@ -43,7 +91,7 @@
 
                 <div class="form-group">
                     <div class="input-wrapper password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <input type="password" id="password" name="password" required autocomplete="new-password">
                         <label for="password">Password</label>
                         <div class="input-line"></div>
                         <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
@@ -57,7 +105,7 @@
 
                 <div class="form-group">
                     <div class="input-wrapper password-wrapper">
-                        <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="current-password">
+                        <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password">
                         <label for="confirmPassword">Confirm Password</label>
                         <div class="input-line"></div>
                         <button type="button" class="password-toggle" id="passwordToggleConfirm" aria-label="Toggle password visibility">
@@ -87,7 +135,7 @@
 
                 <button type="submit" class="login-btn material-btn">
                     <div class="btn-ripple"></div>
-                    <span class="btn-text">SIGN IN</span>
+                    <span class="btn-text">SIGN UP</span>
                     <div class="btn-loader">
                         <svg class="loader-circle" viewBox="0 0 50 50">
                             <circle class="loader-path" cx="25" cy="25" r="12" fill="none" stroke="currentColor" stroke-width="3"/>

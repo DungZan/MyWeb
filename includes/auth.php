@@ -17,10 +17,48 @@ function login($email, $password) {
     $result = $stmt->get_result();
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
-        if ($password === $user['password']) { // Giả sử mật khẩu chưa mã hóa
+        // mã hóa mật khẩu
+        if (password_verify($password, $user['password'])) {
             return $user;
         }
     }
     return false;
+}
+function signup($name, $email, $password) {
+    global $conn;
+    // Kiểm tra email đã tồn tại
+    $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->bind_param('s', $email);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        $stmt->close();
+        return [
+            'success' => false,
+            'message' => 'Email đã được sử dụng.'
+        ];
+    }
+    $stmt->close();
+
+    // Mã hóa mật khẩu
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $conn->prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
+    $stmt->bind_param('sss', $name, $email, $hashed_password);
+    if ($stmt->execute()) {
+        $user_id = $stmt->insert_id;
+        $stmt->close();
+        return [
+            'success' => true,
+            'user_id' => $user_id,
+            'message' => 'Đăng ký thành công!'
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+        return [
+            'success' => false,
+            'message' => 'Đăng ký thất bại: ' . $error
+        ];
+    }
 }
 ?>

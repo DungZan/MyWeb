@@ -23,7 +23,7 @@ class MaterialLoginForm {
     }
     
     bindEvents() {
-        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        //this.form.addEventListener('submit', (e) => this.handleSubmit(e));
         this.emailInput.addEventListener('blur', () => this.validateEmail());
         this.passwordInput.addEventListener('blur', () => this.validatePassword());
         this.emailInput.addEventListener('input', () => this.clearError('email'));
@@ -215,6 +215,7 @@ class MaterialLoginForm {
         
         const isEmailValid = this.validateEmail();
         const isPasswordValid = this.validatePassword();
+        
         
         if (!isEmailValid || !isPasswordValid) {
             // Add material feedback for invalid form
