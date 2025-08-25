@@ -60,12 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             
             <?php if (!empty($error)): ?>
-            <div class="error-message" style="color:red; text-align:center; margin-bottom:10px;">
+            <div class="error-message1" style="color:red; text-align:center; margin-bottom:10px;">
                 <?= htmlspecialchars($error) ?>
             </div>
             <?php endif; ?>
             <?php if (!empty($success)): ?>
-            <div class="success-message" style="color:green; text-align:center; margin-bottom:10px;">
+            <div class="success-message1" style="color:green; text-align:center; margin-bottom:10px;">
                 <?= htmlspecialchars($success) ?>
             </div>
             <?php endif; ?>
@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="signup-link">
-                <p>Don't have an account? <a href="#" class="create-account">Create account</a></p>
+                <p>You already have an account? <a href="login.php" class="create-account">Login</a></p>
             </div>
 
             <div class="success-message" id="successMessage">

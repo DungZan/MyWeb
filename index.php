@@ -14,6 +14,9 @@ if (!isset($_SESSION['user_id'])) {
 </head>
 <body>
     <h1>Chào mừng bạn đến với trang chủ người dùng</h1>
+    <p>Xin chào, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</p>
+    <p>Email: <?php echo htmlspecialchars($_SESSION['email']); ?></p>
+    <p>Quyền: <?php echo !empty($_SESSION['is_admin']) ? 'Admin' : 'User'; ?></p>
     <button onclick="location.href='logout.php'">Đăng xuất</button>
 </body>
 </html>

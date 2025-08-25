@@ -344,7 +344,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#profileModal">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Profile
                                 </a>
@@ -724,6 +724,31 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
         <i class="fas fa-angle-up"></i>
     </a>
 
+    <!-- Profile Modal-->
+    <div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileModalLabel">Thông tin cá nhân</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Name :</strong> <?php echo htmlspecialchars($_SESSION['user_name']); ?></li>
+                        <li class="list-group-item"><strong>Email :</strong> <?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?></li>
+                        <li class="list-group-item"><strong>Role :</strong> <?php echo !empty($_SESSION['is_admin']) ? 'Admin' : 'User'; ?></li>
+                        <li class="list-group-item"><strong>User ID :</strong> <?php echo htmlspecialchars($_SESSION['user_id']); ?></li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Logout Modal-->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
@@ -743,6 +768,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
             </div>
         </div>
     </div>
+
 
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>

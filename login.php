@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
+            $_SESSION['email'] = $user['email'];
             $_SESSION['is_admin'] = $user['is_admin'];
             // Nếu người dùng là quản trị viên, chuyển hướng đến trang quản trị
             if ($user['is_admin']) {
@@ -52,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <form class="login-form" id="loginForm" method="POST" novalidate>
                 <?php if (!empty($error)): ?>
-                <div class="error-message" style="color:red; text-align:center; margin-bottom:10px;">
+                <div class="error-message1" style="color:red; text-align:center; margin-bottom:10px;">
                     <?= htmlspecialchars($error) ?>
                 </div>
                 <?php endif; ?>
@@ -137,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="signup-link">
-                <p>Don't have an account? <a href="#" class="create-account">Create account</a></p>
+                <p>Don't have an account? <a href="registration.php" class="create-account">Create account</a></p>
             </div>
 
             <div class="success-message" id="successMessage">
