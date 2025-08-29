@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/auth.php';
 $error = '';
 $success = '';
+session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullname = trim($_POST['fullname'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -16,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (strlen($password) < 6) {
         $error = 'Mật khẩu phải có ít nhất 6 ký tự.';
     } else {
-        // Kiểm tra email đã tồn tại chưa
         global $conn;
         $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
         $stmt->bind_param('s', $email);
@@ -25,10 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->num_rows > 0) {
             $error = 'Email đã được sử dụng.';
         } else {
-            if (signup($fullname, $email, $password)) {
-                $success = 'Đăng ký thành công! Bạn có thể đăng nhập.';
+            // Gửi mã xác nhận
+            require_once __DIR__ . '/includes/sendmail.php';
+            $code = rand(100000, 999999);
+            $_SESSION['verify_email'] = $email;
+            $_SESSION['verify_name'] = $fullname;
+            $_SESSION['verify_password'] = password_hash($password, PASSWORD_DEFAULT);
+            $_SESSION['verify_code'] = $code;
+            if (send_verification_email($email, $fullname, $code)) {
+                header('Location: verify.php');
+                exit;
             } else {
-                $error = 'Đăng ký thất bại. Vui lòng thử lại.';
+                $error = 'Không gửi được mã xác nhận. Vui lòng thử lại.';
             }
         }
         $stmt->close();

@@ -24,7 +24,7 @@ function login($email, $password) {
     }
     return false;
 }
-function signup($name, $email, $password) {
+function signup($name, $email, $password, $isHashed = false) {
     global $conn;
     // Kiểm tra email đã tồn tại
     $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
@@ -40,8 +40,8 @@ function signup($name, $email, $password) {
     }
     $stmt->close();
 
-    // Mã hóa mật khẩu
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    // Mã hóa nếu chưa mã hóa
+    $hashed_password = $isHashed ? $password : password_hash($password, PASSWORD_DEFAULT);
     $stmt = $conn->prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
     $stmt->bind_param('sss', $name, $email, $hashed_password);
     if ($stmt->execute()) {
