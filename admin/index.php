@@ -144,9 +144,20 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
 
             <!-- Nav Item - Tables -->
             <li class="nav-item">
-                <a class="nav-link" href="tables.html">
+                <a class="nav-link" href="?page=user">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
+                    <span>User</span></a>
+            </li>
+
+                        <li class="nav-item">
+                <a class="nav-link" href="?page=product">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Product</span></a>
+            </li>
+                        <li class="nav-item">
+                <a class="nav-link" href="?page=test">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Test</span></a>
             </li>
 
             <!-- Divider -->
@@ -381,27 +392,27 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                 <div class="container-fluid">
                     <div id="main-content">
                         <?php
+                        $pages = [
+                            'bai1' => 'Bai1.php',
+                            'bai2' => 'Bai2.php',
+                            'bai3' => 'Bai3.php',
+                            'bai4' => 'Bai4.php',
+                            'bai5' => 'Bai5.php',
+                            'bai6' => 'Bai6.php',
+                            'bai7' => 'Bai7.php',
+                            'bai8' => 'Bai8.php',
+                            'bai9' => 'Bai9.php',
+                            'bai10' => 'Bai10.php',
+                        'user' => 'user.php',
+                        'product' => 'product.php',
+                        'test' => 'test.php',
+                        ];
                         if (isset($_GET['page'])) {
-                            if ($_GET['page'] === 'bai1') {
-                                include 'Bai1.php';
-                            } elseif ($_GET['page'] === 'bai2') {
-                                include 'Bai2.php';
-                            } elseif ($_GET['page'] === 'bai3') {
-                                include 'Bai3.php';
-                            } elseif ($_GET['page'] === 'bai4') {
-                                include 'Bai4.php';
-                            } elseif ($_GET['page'] === 'bai5') {
-                                include 'Bai5.php';
-                            } elseif ($_GET['page'] === 'bai6') {
-                                include 'Bai6.php';
-                            } elseif ($_GET['page'] === 'bai7') {
-                                include 'Bai7.php';
-                            } elseif ($_GET['page'] === 'bai8') {
-                                include 'Bai8.php';
-                            } elseif ($_GET['page'] === 'bai9') {
-                                include 'Bai9.php';
-                            } elseif ($_GET['page'] === 'bai10') {
-                                include 'Bai10.php';
+                            $page = $_GET['page'];
+                            if (array_key_exists($page, $pages)) {
+                                // Pass pagination variables safely
+                                $_GET['p'] = isset($_GET['p']) && is_numeric($_GET['p']) ? (int)$_GET['p'] : 1;
+                                include $pages[$page];
                             } else {
                                 echo '<div class="alert alert-warning">Không tìm thấy nội dung yêu cầu.</div>';
                             }

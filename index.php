@@ -673,106 +673,63 @@ if (!isset($_SESSION['user_id'])) {
       </div>
       <div class="swiper product-swiper open-up" data-aos="zoom-out">
         <div class="swiper-wrapper d-flex">
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-1.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="element-title text-uppercase fs-5 mt-3">
-                    <a href="index.html">Dark florish onepiece</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$95.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-2.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Baggy Shirt</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$55.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-3.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Cotton off-white shirt</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$65.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-4.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Crop sweater</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$50.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-10.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Crop sweater</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$70.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
+          
+          <!-- Hiển thị toàn bộ sản phẩm -->
+
+            <?php
+                      // Kết nối database
+                      $host = 'localhost';
+                      $db = 'quanao_db';
+                      $user = 'root';
+                      $pass = '';
+                      $conn = new mysqli($host, $user, $pass, $db);
+                      if ($conn->connect_error) {
+                        die('Kết nối thất bại: ' . $conn->connect_error);
+                      }
+                      // Lấy toàn bộ sản phẩm
+                      $sql = "SELECT id, name, price, image FROM products ORDER BY id DESC";
+                      $result = $conn->query($sql);
+
+                      if ($result && $result->num_rows > 0) {
+                        while ($p = $result->fetch_assoc()) {
+                          $pid   = (int)$p['id'];
+                          $pname = htmlspecialchars($p['name'] ?? 'No name');
+                          $price = is_numeric($p['price']) ? number_format($p['price'], 2) : '0.00';
+
+                          // Xử lý ảnh
+                          $rawImg = trim($p['image'] ?? '');
+                          $img = $rawImg !== '' ? 'uploads/' . basename($rawImg) : 'assets/images/product-item-1.jpg';
+                          if (!is_file($img)) {
+                            $img = 'assets/images/product-item-1.jpg';
+                          }
+
+                          echo '<div class="swiper-slide">
+                              <div class="product-item image-zoom-effect link-effect">
+                                <div class="image-holder position-relative">
+                                <a href="product.php?id=' . $pid . '">
+                                  <img src="' . htmlspecialchars($img) . '" alt="' . $pname . '" class="product-image img-fluid">
+                                </a>
+                                <a href="wishlist_add.php?id=' . $pid . '" class="btn-icon btn-wishlist">
+                                  <svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#heart"></use></svg>
+                                </a>
+                                <div class="product-content">
+                                  <h5 class="element-title text-uppercase fs-5 mt-3">
+                                  <a href="product.php?id=' . $pid . '">' . $pname . '</a>
+                                  </h5>
+                                  <a href="cart_add.php?id=' . $pid . '" class="text-decoration-none" data-after="Add to cart">
+                                  <span>$' . $price . '</span>
+                                  </a>
+                                </div>
+                                </div>
+                              </div>
+                              </div>';
+                        }
+                      } else {
+                        echo '<div class="swiper-slide"><div class="p-5 text-center">Không có sản phẩm.</div></div>';
+                      }
+
+                      $conn->close();
+              ?>
         </div>
         <div class="swiper-pagination"></div>
       </div>
