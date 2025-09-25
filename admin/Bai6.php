@@ -1,11 +1,28 @@
 <?php
 // Bài 6: Tính giai thừa
 $gt = '';
+
+// Sử dụng BCMath để tính giai thừa lớn
+function factorial_bcmath($n) {
+    $result = '1';
+    for ($i = 2; $i <= $n; $i++) {
+        $result = bcmul($result, (string)$i);
+    }
+    return $result;
+}
 if (isset($_POST['n6'])) {
     $n = intval($_POST['n6']);
-    $gt = 1;
-    for ($i = 2; $i <= $n; $i++) {
-        $gt *= $i;
+    if ($n < 0) {
+        $gt = 'Không xác định cho n < 0';
+    } elseif ($n <= 20) {
+        // Sử dụng hàm tích lũy cho n nhỏ
+        $gt = 1;
+        for ($i = 2; $i <= $n; $i++) {
+            $gt *= $i;
+        }
+    } else {
+        // Sử dụng BCMath cho n lớn
+        $gt = factorial_bcmath($n);
     }
 }
 ?>

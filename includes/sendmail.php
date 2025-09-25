@@ -18,7 +18,7 @@ function send_verification_email($to_email, $to_name, $code) {
         $mail->CharSet    = 'UTF-8';
 
         //Recipients
-        $mail->setFrom('phamtiendung2k4@gmail.com', 'MyWeb');
+        $mail->setFrom('dungchohaphap@gmail.com', 'MyWeb');
         $mail->addAddress($to_email, $to_name);
 
         // Content

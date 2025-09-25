@@ -25,7 +25,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
         rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/sb-admin-2.css" rel="stylesheet">
 
 </head>
 
@@ -155,9 +155,9 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                     <span>Product</span></a>
             </li>
                         <li class="nav-item">
-                <a class="nav-link" href="?page=test">
+                <a class="nav-link" href="?page=category">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>Test</span></a>
+                    <span>Category</span></a>
             </li>
 
             <!-- Divider -->
@@ -405,7 +405,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                             'bai10' => 'Bai10.php',
                         'user' => 'user.php',
                         'product' => 'product.php',
-                        'test' => 'test.php',
+                        'category' => 'category.php',
                         ];
                         if (isset($_GET['page'])) {
                             $page = $_GET['page'];
