@@ -1,9 +1,78 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
+  header('Location: login.php');
+  exit;
 }
+
+require_once __DIR__ . '/includes/auth.php';
+
+$navCategories = [];
+$categoryResult = $conn->query('SELECT STT, Ten FROM loaisp ORDER BY Ten');
+if ($categoryResult) {
+  while ($row = $categoryResult->fetch_assoc()) {
+    $navCategories[] = $row;
+  }
+}
+
+if (!function_exists('str_starts_with')) {
+  function str_starts_with(string $haystack, string $needle): bool
+  {
+    return $needle === '' || strncmp($haystack, $needle, strlen($needle)) === 0;
+  }
+}
+
+/**
+ * @return array<int, array<string, mixed>>
+ */
+function loadProducts(mysqli $conn, string $orderKey, int $limit = 6): array
+{
+  $orders = [
+    'latest' => 'sp.STT DESC',
+    'stock_desc' => 'sp.SoLuongTon DESC',
+    'name_asc' => 'sp.TenSP ASC'
+  ];
+  $orderSql = $orders[$orderKey] ?? $orders['latest'];
+  $limit = max(1, min($limit, 12));
+
+  $stmt = $conn->prepare("SELECT sp.STT, sp.TenSP, sp.HinhAnh, sp.GiaMuaCoBan FROM sanpham sp ORDER BY $orderSql LIMIT ?");
+  if (!$stmt) {
+    return [];
+  }
+  $stmt->bind_param('i', $limit);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $products = [];
+  if ($result) {
+    while ($row = $result->fetch_assoc()) {
+      $products[] = $row;
+    }
+  }
+  $stmt->close();
+  return $products;
+}
+
+function resolveProductImage(?string $image): string
+{
+  $image = trim((string) $image);
+  if ($image === '') {
+    return 'assets/images/product-item-1.jpg';
+  }
+  if (preg_match('/^https?:\/\//i', $image) || str_starts_with($image, '/')) {
+    return $image;
+  }
+  return 'assets/images/' . ltrim($image, '/');
+}
+
+function formatCurrency(?float $price): string
+{
+  $value = $price ?? 0;
+  return number_format((float) $value, 0, ',', '.') . ' ₫';
+}
+
+$newArrivals = loadProducts($conn, 'latest');
+$bestSellers = loadProducts($conn, 'stock_desc');
+$youMayLike = loadProducts($conn, 'name_asc');
 ?>
 
 <!DOCTYPE html>
@@ -297,27 +366,16 @@ if (!isset($_SESSION['user_id'])) {
                     aria-haspopup="true" aria-expanded="false">Shop</a>
                   <ul class="dropdown-menu list-unstyled" aria-labelledby="dropdownShop">
                     <li>
-                      <?php
-                      // Kết nối database
-                      $host = 'localhost';
-                      $db = 'quanao_db';
-                      $user = 'root';
-                      $pass = '';
-                      $conn = new mysqli($host, $user, $pass, $db);
-                      if ($conn->connect_error) {
-                        die('Kết nối thất bại: ' . $conn->connect_error);
-                      }
-                      $sql = "SELECT id, name FROM categories";
-                      $result = $conn->query($sql);
-                      if ($result && $result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
-                          echo '<a href="category.php?id=' . $row['id'] . '" class="dropdown-item item-anchor">' . htmlspecialchars($row['name']) . '</a>';
-                        }
-                      } else {
-                        echo '<a href="#" class="dropdown-item item-anchor">Không có phân loại</a>';
-                      }
-                      $conn->close();
-                      ?>
+                      <?php if ($navCategories): ?>
+                        <?php foreach ($navCategories as $category): ?>
+                          <a href="category.php?id=<?php echo urlencode($category['STT']); ?>"
+                            class="dropdown-item item-anchor">
+                            <?php echo htmlspecialchars($category['Ten']); ?>
+                          </a>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <span class="dropdown-item item-anchor text-muted">Chưa có phân loại</span>
+                      <?php endif; ?>
                     </li>
                   </ul>
                 </li>
@@ -673,106 +731,40 @@ if (!isset($_SESSION['user_id'])) {
       </div>
       <div class="swiper product-swiper open-up" data-aos="zoom-out">
         <div class="swiper-wrapper d-flex">
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-1.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="element-title text-uppercase fs-5 mt-3">
-                    <a href="index.html">Dark florish onepiece</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$95.00</span></a>
+          <?php if ($newArrivals): ?>
+            <?php foreach ($newArrivals as $product): ?>
+              <div class="swiper-slide">
+                <div class="product-item image-zoom-effect link-effect">
+                  <div class="image-holder position-relative">
+                    <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                      <img src="<?php echo htmlspecialchars(resolveProductImage($product['HinhAnh'] ?? '')); ?>"
+                        alt="<?php echo htmlspecialchars($product['TenSP']); ?>" class="product-image img-fluid">
+                    </a>
+                    <a href="#" class="btn-icon btn-wishlist" title="Yêu thích">
+                      <svg width="24" height="24" viewBox="0 0 24 24">
+                        <use xlink:href="#heart"></use>
+                      </svg>
+                    </a>
+                    <div class="product-content">
+                      <h5 class="element-title text-uppercase fs-5 mt-3">
+                        <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                          <?php echo htmlspecialchars($product['TenSP']); ?>
+                        </a>
+                      </h5>
+                      <a href="product.php?id=<?php echo urlencode($product['STT']); ?>" class="text-decoration-none"
+                        data-after="Add to cart"><span><?php echo htmlspecialchars(formatCurrency((float) ($product['GiaMuaCoBan'] ?? 0))); ?></span></a>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-2.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Baggy Shirt</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$55.00</span></a>
-                </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="swiper-slide">
+              <div class="product-item p-5 text-center w-100">
+                <p class="mb-0">Chưa có sản phẩm mới.</p>
               </div>
             </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-3.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Cotton off-white shirt</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$65.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-4.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Crop sweater</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$50.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder position-relative">
-                <a href="index.html">
-                  <img src="assets/images/product-item-10.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Crop sweater</a>
-                  </h5>
-                  <a href="#" class="text-decoration-none" data-after="Add to cart"><span>$70.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
+          <?php endif; ?>
         </div>
         <div class="swiper-pagination"></div>
       </div>
@@ -818,126 +810,40 @@ if (!isset($_SESSION['user_id'])) {
       </div>
       <div class="swiper product-swiper open-up" data-aos="zoom-out">
         <div class="swiper-wrapper d-flex">
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-4.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Dark florish onepiece</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$95.00</span></a>
+          <?php if ($bestSellers): ?>
+            <?php foreach ($bestSellers as $product): ?>
+              <div class="swiper-slide">
+                <div class="product-item image-zoom-effect link-effect">
+                  <div class="image-holder">
+                    <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                      <img src="<?php echo htmlspecialchars(resolveProductImage($product['HinhAnh'] ?? '')); ?>"
+                        alt="<?php echo htmlspecialchars($product['TenSP']); ?>" class="product-image img-fluid">
+                    </a>
+                    <a href="#" class="btn-icon btn-wishlist" title="Yêu thích">
+                      <svg width="24" height="24" viewBox="0 0 24 24">
+                        <use xlink:href="#heart"></use>
+                      </svg>
+                    </a>
+                    <div class="product-content">
+                      <h5 class="text-uppercase fs-5 mt-3">
+                        <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                          <?php echo htmlspecialchars($product['TenSP']); ?>
+                        </a>
+                      </h5>
+                      <a href="product.php?id=<?php echo urlencode($product['STT']); ?>" class="text-decoration-none"
+                        data-after="Add to cart"><span><?php echo htmlspecialchars(formatCurrency((float) ($product['GiaMuaCoBan'] ?? 0))); ?></span></a>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-3.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Baggy Shirt</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$55.00</span></a>
-                </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="swiper-slide">
+              <div class="product-item p-5 text-center w-100">
+                <p class="mb-0">Chưa có dữ liệu bán chạy.</p>
               </div>
             </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-5.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Cotton off-white shirt</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$65.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-6.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Handmade crop sweater</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$50.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-9.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Dark florish onepiece</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$70.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-10.jpg" alt="categories" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Cotton off-white shirt</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$70.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
+          <?php endif; ?>
         </div>
         <div class="swiper-pagination"></div>
       </div>
@@ -1021,106 +927,40 @@ if (!isset($_SESSION['user_id'])) {
       </div>
       <div class="swiper product-swiper open-up" data-aos="zoom-out">
         <div class="swiper-wrapper d-flex">
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-5.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Dark florish onepiece</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$95.00</span></a>
+          <?php if ($youMayLike): ?>
+            <?php foreach ($youMayLike as $product): ?>
+              <div class="swiper-slide">
+                <div class="product-item image-zoom-effect link-effect">
+                  <div class="image-holder">
+                    <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                      <img src="<?php echo htmlspecialchars(resolveProductImage($product['HinhAnh'] ?? '')); ?>"
+                        alt="<?php echo htmlspecialchars($product['TenSP']); ?>" class="product-image img-fluid">
+                    </a>
+                    <a href="#" class="btn-icon btn-wishlist" title="Yêu thích">
+                      <svg width="24" height="24" viewBox="0 0 24 24">
+                        <use xlink:href="#heart"></use>
+                      </svg>
+                    </a>
+                    <div class="product-content">
+                      <h5 class="text-uppercase fs-5 mt-3">
+                        <a href="product.php?id=<?php echo urlencode($product['STT']); ?>">
+                          <?php echo htmlspecialchars($product['TenSP']); ?>
+                        </a>
+                      </h5>
+                      <a href="product.php?id=<?php echo urlencode($product['STT']); ?>" class="text-decoration-none"
+                        data-after="Add to cart"><span><?php echo htmlspecialchars(formatCurrency((float) ($product['GiaMuaCoBan'] ?? 0))); ?></span></a>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-6.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Baggy Shirt</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$55.00</span></a>
-                </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <div class="swiper-slide">
+              <div class="product-item p-5 text-center w-100">
+                <p class="mb-0">Chưa có gợi ý sản phẩm.</p>
               </div>
             </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-7.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Cotton off-white shirt</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$65.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-8.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Handmade crop sweater</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$50.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-slide">
-            <div class="product-item image-zoom-effect link-effect">
-              <div class="image-holder">
-                <a href="index.html">
-                  <img src="assets/images/product-item-1.jpg" alt="product" class="product-image img-fluid">
-                </a>
-                <a href="index.html" class="btn-icon btn-wishlist">
-                  <svg width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#heart"></use>
-                  </svg>
-                </a>
-                <div class="product-content">
-                  <h5 class="text-uppercase fs-5 mt-3">
-                    <a href="index.html">Handmade crop sweater</a>
-                  </h5>
-                  <a href="index.html" class="text-decoration-none" data-after="Add to cart"><span>$70.00</span></a>
-                </div>
-              </div>
-            </div>
-          </div>
+          <?php endif; ?>
         </div>
         <div class="swiper-pagination"></div>
       </div>

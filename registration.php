@@ -5,11 +5,14 @@ $success = '';
 session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fullname = trim($_POST['fullname'] ?? '');
+    $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirmPassword'] ?? '';
-    if (empty($fullname) || empty($email) || empty($password) || empty($confirmPassword)) {
+    if (empty($fullname) || empty($username) || empty($email) || empty($password) || empty($confirmPassword)) {
         $error = 'Vui lòng nhập đầy đủ thông tin.';
+    } elseif (!preg_match('/^[A-Za-z0-9_.-]{4,}$/', $username)) {
+        $error = 'Tên đăng nhập phải có ít nhất 4 ký tự và không chứa khoảng trắng.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Email không hợp lệ.';
     } elseif ($password !== $confirmPassword) {
@@ -18,18 +21,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Mật khẩu phải có ít nhất 6 ký tự.';
     } else {
         global $conn;
-        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-        $stmt->bind_param('s', $email);
+        $stmt = $conn->prepare('SELECT STT FROM taikhoan WHERE TenDangNhap = ? LIMIT 1');
+        $stmt->bind_param('s', $username);
         $stmt->execute();
         $stmt->store_result();
         if ($stmt->num_rows > 0) {
-            $error = 'Email đã được sử dụng.';
-        } else {
+            $error = 'Tên đăng nhập đã được sử dụng.';
+        }
+        $stmt->close();
+
+        if (!$error) {
+            $stmt = $conn->prepare('SELECT STT FROM taikhoan WHERE GhiChu = ? LIMIT 1');
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $stmt->store_result();
+            if ($stmt->num_rows > 0) {
+                $error = 'Email đã được sử dụng.';
+            }
+            $stmt->close();
+        }
+
+        if (!$error) {
             // Gửi mã xác nhận
             require_once __DIR__ . '/includes/sendmail.php';
             $code = rand(100000, 999999);
             $_SESSION['verify_email'] = $email;
             $_SESSION['verify_name'] = $fullname;
+            $_SESSION['verify_username'] = $username;
             $_SESSION['verify_password'] = password_hash($password, PASSWORD_DEFAULT);
             $_SESSION['verify_code'] = $code;
             if (send_verification_email($email, $fullname, $code)) {
@@ -39,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Không gửi được mã xác nhận. Vui lòng thử lại.';
             }
         }
-        $stmt->close();
     }
 }
 ?>
@@ -86,6 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="ripple-container"></div>
                     </div>
                     <span class="error-message" id="fullnameError"></span>
+                </div>
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" required autocomplete="username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
+                        <label for="username">Username</label>
+                        <div class="input-line"></div>
+                        <div class="ripple-container"></div>
+                    </div>
+                    <span class="error-message" id="usernameError"></span>
                 </div>
                 <div class="form-group">
                     <div class="input-wrapper">

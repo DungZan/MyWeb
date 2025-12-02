@@ -3,16 +3,18 @@ session_start();
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/includes/auth.php';
-    $email = trim($_POST['email'] ?? '');
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    if (empty($email) || empty($password)) {
-        $error = 'Vui lòng nhập đầy đủ email và mật khẩu.';
+    if (empty($username) || empty($password)) {
+        $error = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.';
     } else {
-        $user = login($email, $password);
+        $user = login($username, $password);
         if ($user) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
+            $_SESSION['username'] = $user['username'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
             $_SESSION['is_admin'] = $user['is_admin'];
             // Nếu người dùng là quản trị viên, chuyển hướng đến trang quản trị
             if ($user['is_admin']) {
@@ -59,12 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 <div class="form-group">
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" required autocomplete="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>">
-                        <label for="email">Email</label>
+                        <input type="text" id="username" name="username" required autocomplete="username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>">
+                        <label for="username">Username</label>
                         <div class="input-line"></div>
                         <div class="ripple-container"></div>
                     </div>
-                    <span class="error-message" id="emailError"></span>
+                    <span class="error-message" id="usernameError"></span>
                 </div>
 
                 <div class="form-group">

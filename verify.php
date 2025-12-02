@@ -12,14 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Đăng ký tài khoản
         require_once __DIR__ . '/includes/auth.php';
         $fullname = $_SESSION['verify_name'];
+        $username = $_SESSION['verify_username'];
         $email = $_SESSION['verify_email'];
         $password = $_SESSION['verify_password'];
-        if (signup($fullname, $email, $password, true)) {
+        $result = signup($fullname, $username, $email, $password, true);
+        if (!empty($result['success'])) {
             $success = 'Xác thực thành công! Bạn có thể đăng nhập.';
-            unset($_SESSION['verify_email'], $_SESSION['verify_name'], $_SESSION['verify_password'], $_SESSION['verify_code']);
+            unset($_SESSION['verify_email'], $_SESSION['verify_name'], $_SESSION['verify_username'], $_SESSION['verify_password'], $_SESSION['verify_code']);
             Header('Refresh: 3; URL=login.php');
         } else {
-            $error = 'Đăng ký thất bại. Vui lòng thử lại.';
+            $error = $result['message'] ?? 'Đăng ký thất bại. Vui lòng thử lại.';
         }
     } else {
         $error = 'Mã xác nhận không đúng.';

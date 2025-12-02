@@ -42,7 +42,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-laugh-wink"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+                <div class="sidebar-brand-text mx-3"> Admin </div>
             </a>
 
             <!-- Divider -->
@@ -98,7 +98,8 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Cài đặt sản phẩm:</h6>
-                        <a class="collapse-item" href="">Sản phẩm</a>
+                        <a class="collapse-item" href="?page=products">Sản phẩm</a>
+                        <a class="collapse-item" href="?page=import">Nhập hàng</a>
                         <a class="collapse-item" href="">Đường viền</a>
                         <a class="collapse-item" href="">Hoạt hình</a>
                         <a class="collapse-item" href="">Khác</a>
@@ -160,7 +161,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
             <!-- Sidebar Message -->
             <div class="sidebar-card d-none d-lg-flex">
                 <img class="sidebar-card-illustration mb-2" src="img/undraw_rocket.svg" alt="...">
-                <p class="text-center mb-2"><strong>SB Admin Pro</strong> is packed with premium features, components, and more!</p>
+                <p class="text-center mb-2"><strong>Admin</strong> is packed with premium features, components, and more!</p>
                 <a class="btn btn-success btn-sm" href="https://startbootstrap.com/theme/sb-admin-pro">Upgrade to Pro!</a>
             </div>
 
@@ -402,6 +403,10 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                                 include 'Bai9.php';
                             } elseif ($_GET['page'] === 'bai10') {
                                 include 'Bai10.php';
+                            } elseif ($_GET['page'] === 'products') {
+                                include 'products.php';
+                            } elseif ($_GET['page'] === 'import') {
+                                include 'import.php';
                             } else {
                                 echo '<div class="alert alert-warning">Không tìm thấy nội dung yêu cầu.</div>';
                             }
