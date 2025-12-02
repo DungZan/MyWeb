@@ -25,7 +25,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
         rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/sb-admin-2.css" rel="stylesheet">
 
 </head>
 
@@ -145,9 +145,20 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
 
             <!-- Nav Item - Tables -->
             <li class="nav-item">
-                <a class="nav-link" href="tables.html">
+                <a class="nav-link" href="?page=user">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
+                    <span>User</span></a>
+            </li>
+
+                        <li class="nav-item">
+                <a class="nav-link" href="?page=product">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Product</span></a>
+            </li>
+                        <li class="nav-item">
+                <a class="nav-link" href="?page=category">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Category</span></a>
             </li>
 
             <!-- Divider -->
@@ -382,6 +393,21 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['is_admin'])) {
                 <div class="container-fluid">
                     <div id="main-content">
                         <?php
+                        $pages = [
+                            'bai1' => 'Bai1.php',
+                            'bai2' => 'Bai2.php',
+                            'bai3' => 'Bai3.php',
+                            'bai4' => 'Bai4.php',
+                            'bai5' => 'Bai5.php',
+                            'bai6' => 'Bai6.php',
+                            'bai7' => 'Bai7.php',
+                            'bai8' => 'Bai8.php',
+                            'bai9' => 'Bai9.php',
+                            'bai10' => 'Bai10.php',
+                        'user' => 'user.php',
+                        'product' => 'product.php',
+                        'category' => 'category.php',
+                        ];
                         if (isset($_GET['page'])) {
                             if ($_GET['page'] === 'bai1') {
                                 include 'Bai1.php';
